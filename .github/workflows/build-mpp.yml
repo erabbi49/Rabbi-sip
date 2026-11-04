@@ -1,0 +1,49 @@
+name: Build Samsung Dialer Morphe patch
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "SamsungDialerPatch.kt"
+      - ".github/workflows/build-mpp.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout this project
+        uses: actions/checkout@v4
+
+      - name: Checkout official Morphe patches template
+        uses: actions/checkout@v4
+        with:
+          repository: MorpheApp/morphe-patches-template
+          ref: main
+          path: morphe-template
+
+      - name: Add Samsung Dialer patch source
+        run: |
+          mkdir -p morphe-template/patches/src/main/kotlin/app/rabbii/samsungdialer
+          cp SamsungDialerPatch.kt morphe-template/patches/src/main/kotlin/app/rabbii/samsungdialer/SamsungDialerPatch.kt
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: gradle
+
+      - name: Build MPP
+        working-directory: morphe-template
+        run: ./gradlew :patches:buildAndroid --no-daemon
+
+      - name: Upload MPP artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: samsung-dialer-morphe-mpp
+          path: morphe-template/patches/build/libs/*.mpp
+          if-no-files-found: error
+          retention-days: 14
