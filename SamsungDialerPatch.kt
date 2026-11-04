@@ -11,7 +11,6 @@ import app.morphe.patcher.patch.AppTarget
 import app.morphe.patcher.patch.Compatibility
 import app.morphe.patcher.patch.bytecodePatch
 import app.morphe.patcher.string
-import app.rabbii.samsungdialer.SamsungDialerShipBuildFingerprint
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 
@@ -24,13 +23,8 @@ private val samsungDialerCompatibility = Compatibility(
 )
 
 /**
- * Matches the startup call reported in Pf.c.<clinit>().
- *
- * Expected DEX sequence:
- * const-string ..., "ro.product_ship"
- * const-string ..., "none"
- * invoke-static {...}, SemSystemProperties->get(String, String):String
- * move-result-object ...
+ * Matches the Samsung Phone 15.9.72 startup lookup reported at:
+ * Pf.c.<clinit>() -> SemSystemProperties.get("ro.product_ship", "none").
  */
 private object SamsungDialerShipBuildFingerprint : Fingerprint(
     definingClass = "LPf/c;",
@@ -51,10 +45,8 @@ private object SamsungDialerShipBuildFingerprint : Fingerprint(
 )
 
 /**
- * Stage 1: bypass only the Samsung framework lookup that crashes at startup.
- *
- * It substitutes the production-build value "true" for ro.product_ship.
- * It does not emulate other Samsung framework APIs.
+ * Stage 1 only: bypass the Samsung-only ro.product_ship lookup that crashes
+ * startup on non-One UI firmware. It does not emulate other Samsung APIs.
  */
 @Suppress("unused")
 val samsungDialerNonOneUiStartupPatch = bytecodePatch(
@@ -72,13 +64,10 @@ val samsungDialerNonOneUiStartupPatch = bytecodePatch(
         val resultRegister =
             moveResultMatch.getInstruction<OneRegisterInstruction>().registerA
 
-        // The replacement string is written directly into the result register.
         method.replaceInstruction(
             invokeMatch.index,
             """const-string v$resultRegister, "true""""
         )
-
-        // The original move-result-object no longer has a producer.
         method.removeInstruction(moveResultMatch.index)
     }
 }
