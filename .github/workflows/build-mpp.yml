@@ -38,7 +38,15 @@ jobs:
 
       - name: Build MPP
         working-directory: morphe-template
-        run: ./gradlew buildAndroid --no-daemon
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.MORPHE_GPR_TOKEN }}
+        run: |
+          if [ -z "$GITHUB_TOKEN" ]; then
+            echo "Missing MORPHE_GPR_TOKEN secret. Add a GitHub PAT with read:packages scope in Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+          ./gradlew buildAndroid --no-daemon
 
       - name: Upload MPP artifact
         uses: actions/upload-artifact@v4
