@@ -38,7 +38,7 @@ jobs:
 
       - name: Build MPP
         working-directory: morphe-template
-        run: ./gradlew :patches:buildAndroid --no-daemon
+        run: ./gradlew buildAndroid --no-daemon
 
       - name: Upload MPP artifact
         uses: actions/upload-artifact@v4
