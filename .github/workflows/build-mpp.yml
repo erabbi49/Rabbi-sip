@@ -24,6 +24,9 @@ jobs:
           ref: main
           path: morphe-template
 
+      - name: Remove unused template example patch
+        run: rm -rf morphe-template/patches/src/main/kotlin/app/template/patches/example
+
       - name: Add Samsung Dialer patch source
         run: |
           mkdir -p morphe-template/patches/src/main/kotlin/app/rabbii/samsungdialer
